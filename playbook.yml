@@ -1,0 +1,31 @@
+---
+
+- name: "Installing packages"
+  hosts: "all"
+  become: true
+
+  tasks:
+
+    - name: "Install Task packages"
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: "present"
+        update_cache: true
+      loop:
+        - vim
+        - wget
+        - htop
+        - tmux
+        - nginx
+        - apache2
+        - php
+
+    - name: "Change apache2 port to 8888"
+      lineinfile: dest=/etc/apache2/ports.conf regexp='^Listen 80' line='Listen 8888'
+
+    - name: "Restart Apache2"
+      service:
+        name: "apache2"
+        state: "restarted"
+
+...

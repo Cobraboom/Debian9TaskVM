@@ -1,0 +1,68 @@
+---
+
+- name: "Update PHP 7.0 to 7.2"
+  hosts: "all"
+  become: true
+
+  tasks:
+
+
+
+    - name: "Instal apt-transport-https"
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: "present"
+        update_cache: true
+      loop:
+        - software-properties-common
+        - dirmngr
+        - apt-transport-https
+        - lsb-release
+        - ca-certificates
+
+    - copy:
+        content: 'APT::Get::AllowUnauthenticated "true";'
+        dest: "/etc/apt/apt.conf.d/99myown"
+        backup: yes
+        owner: root
+        group: root
+        mode: 0644
+
+    - copy:
+        content: "deb [trusted=yes] https://packages.sury.org/php/ stretch main"
+        dest: "/etc/apt/sources.list.d/php.list"
+        backup: yes
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: "Download the signing key"
+      ansible.builtin.apt:
+        shell: "sudo LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php"
+
+    - name: "Update"
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: "Install PHP7.2"
+      ansible.builtin.apt:
+        name: "php7.2"
+        state: "present"
+        update_cache: true
+
+    - name: "Disable php7.0 and enable php7.2"
+      shell: "a2dismod php7.0 | a2enmod php7.2"
+
+    - name: "Restart Apache2"
+      service:
+        name: "apache2"
+        state: "restarted"
+
+    - name: "Remove php7.0"
+      ansible.builtin.apt:
+        name: "php7.0"
+        state: "absent"
+
+
+
+...
